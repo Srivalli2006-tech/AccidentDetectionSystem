@@ -1,9 +1,14 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const accidentSchema = new mongoose.Schema({
-    latitude: Number,
-    longitude: Number,
-    timestamp: { type: Date, default: Date.now }
+const AccidentSchema = new mongoose.Schema({
+  person: String,
+  location: String,
+  position: { type: [Number], required: true }, // [lat, lng]
+  date: String,
+  time: String,
+  severity: String,
+  description: String,
+  contact: String,
 });
 
-module.exports = mongoose.model('Accident', accidentSchema);
+module.exports = mongoose.model("Accident", AccidentSchema);

@@ -1,0 +1,16 @@
+# Ignore dependencies
+node_modules/
+frontend-mobile/node_modules/
+frontend-web/node_modules/
+
+# Logs
+*.log
+
+# Build outputs
+dist/
+build/
+
+# OS / IDE junk
+.DS_Store
+Thumbs.db
+.vscode/

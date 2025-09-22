@@ -1,39 +1,108 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState, useRef } from "react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { fetchAccidents } from "./api";
+import Barcode from "./components/Barcode";
+import "./App.css";
+import "leaflet/dist/leaflet.css";
+
+// Marker component with popup containing QR code
+const MarkerWithPopup = React.forwardRef(({ accident }, ref) => {
+  return (
+    <Marker
+      position={[accident.latitude, accident.longitude]}
+      ref={ref}
+    >
+      <Popup>
+        <strong>{accident.description}</strong>
+        <div style={{ marginTop: "10px" }}>
+          <Barcode value={accident.description} />
+        </div>
+      </Popup>
+    </Marker>
+  );
+});
 
 function App() {
   const [accidents, setAccidents] = useState([]);
+  const markerRefs = useRef({}); // Store refs for each marker
+  const [map, setMap] = useState(null); // Store map instance
 
   useEffect(() => {
-    // Fetch accidents from Web router
-    axios.get('http://192.168.1.4:5000/api/web/accidents')
-      .then(res => setAccidents(res.data))
-      .catch(err => console.log(err));
+    const getData = async () => {
+      const data = await fetchAccidents();
+      setAccidents(data);
+    };
+    getData();
   }, []);
 
+  // Handle table "View" click
+  const handleViewClick = (accident) => {
+    const marker = markerRefs.current[accident.id];
+    if (marker && map) {
+      // Zoom into the exact accident location
+      map.setView([accident.latitude, accident.longitude], 16);
+      // Open marker popup with QR code
+      marker.openPopup?.();
+    }
+  };
+
   return (
-    <div style={{ padding: 20, fontFamily: 'Arial' }}>
-      <h1>Accident Dashboard (Web)</h1>
-      <table border="1" cellPadding="10">
-        <thead>
-          <tr>
-            <th>Latitude</th>
-            <th>Longitude</th>
-            <th>Time</th>
-            <th>Google Maps</th>
-          </tr>
-        </thead>
-        <tbody>
-          {accidents.map((acc, index) => (
-            <tr key={index}>
-              <td>{acc.latitude}</td>
-              <td>{acc.longitude}</td>
-              <td>{new Date(acc.timestamp).toLocaleString()}</td>
-              <td><a href={`https://www.google.com/maps?q=${acc.latitude},${acc.longitude}`} target="_blank" rel="noreferrer">View</a></td>
-            </tr>
+    <div className="App">
+      <header className="App-header">
+        <h1>Accident Detection System</h1>
+      </header>
+
+      {/* Map Section */}
+      <div className="map-container">
+        <MapContainer
+          center={[17.385044, 78.486671]}
+          zoom={12}
+          style={{ height: "500px", width: "100%" }}
+          whenCreated={setMap}
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution="&copy; OpenStreetMap contributors"
+          />
+
+          {accidents.map((accident) => (
+            <MarkerWithPopup
+              key={accident.id}
+              accident={accident}
+              ref={(el) => (markerRefs.current[accident.id] = el)}
+            />
           ))}
-        </tbody>
-      </table>
+        </MapContainer>
+      </div>
+
+      {/* Table Section */}
+      <div className="table-container">
+        <h2>Accident Data Table</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Description</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
+              <th>View</th>
+            </tr>
+          </thead>
+          <tbody>
+            {accidents.map((accident) => (
+              <tr key={accident.id}>
+                <td>{accident.id}</td>
+                <td>{accident.description}</td>
+                <td>{accident.latitude}</td>
+                <td>{accident.longitude}</td>
+                <td>
+                  <button onClick={() => handleViewClick(accident)}>View</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
