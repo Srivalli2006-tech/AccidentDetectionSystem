@@ -1,15 +1,15 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const Accident = require('./models/Accident');
+const Accident = require("../models/accident");
 
-// Get all accidents for Web
-router.get('/accidents', async (req, res) => {
-    try {
-        const accidents = await Accident.find().sort({ timestamp: -1 });
-        res.json(accidents);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
+// Get all accidents
+router.get("/", async (req, res) => {
+  try {
+    const accidents = await Accident.find();
+    res.json(accidents);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
 module.exports = router;

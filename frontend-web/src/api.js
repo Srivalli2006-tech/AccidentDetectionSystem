@@ -1,8 +1,12 @@
-// src/api.js
+// frontend-web/src/api.js
+import axios from "axios";
+
 export const fetchAccidents = async () => {
-  // Simulate API response
-  return [
-    { id: 1, latitude: 17.385044, longitude: 78.486671, description: "Minor accident at location A" },
-    { id: 2, latitude: 17.450000, longitude: 78.500000, description: "Major accident at location B" },
-  ];
+  try {
+    const res = await axios.get("http://localhost:5000/api/accidents");
+    return res.data;
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
 };

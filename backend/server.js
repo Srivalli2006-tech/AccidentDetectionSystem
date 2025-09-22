@@ -1,23 +1,36 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-
-const webAccidentRoutes = require('./routes/webAccident');
-const mobileAccidentRoutes = require('./routes/mobileAccident');
+const express = require("express");
+const cors = require("cors");
+const { MongoClient } = require("mongodb");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// MongoDB connection
-mongoose.connect('mongodb://127.0.0.1:27017/accidentDB')
-    .then(() => console.log('MongoDB Connected'))
-    .catch(err => console.log(err));
+// Change port to avoid conflicts
+const PORT = process.env.PORT || 5001; // changed from 5000
+const mongoURI = "mongodb://127.0.0.1:27017/accidentDB";
 
-// Routes
-app.use('/api/web', webAccidentRoutes);
-app.use('/api/mobile', mobileAccidentRoutes);
+let db, accidentsCollection;
+
+MongoClient.connect(mongoURI, { useUnifiedTopology: true })
+  .then(client => {
+    console.log("Connected to MongoDB");
+    db = client.db("accidentDB");
+    accidentsCollection = db.collection("accidents");
+  })
+  .catch(err => console.error(err));
+
+// API: Get all accidents
+app.get("/api/accidents", async (req, res) => {
+  try {
+    const accidents = await accidentsCollection.find({}).toArray();
+    res.json(accidents);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Start server
-const PORT = 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
